@@ -14,6 +14,21 @@ const REVERSIBLE_AMOUNT_KEYS = array(
   'unit_price' => TRUE,
 );
 
+function kincoop_civicrm_preProcess($formName, &$form) {
+  Civi::log()->debug('[TEST] preProcess hook has been called for ' . $formName . ' with form object: ' .
+    print_r($form, TRUE));
+}
+
+function kincoop_civicrm_buildForm($formName, &$form) {
+  Civi::log()->debug('[TEST] buildForm hook has been called for ' . $formName . ' with form object: ' .
+    print_r($form, TRUE));
+}
+
+function kincoop_civicrm_postProcess($formName, &$form) {
+  Civi::log()->debug('[TEST] postProcess hook has been called for ' . $formName . ' with form object: ' .
+    print_r($form, TRUE));
+}
+
 /**
  * Implements hook_civicrm_pre
  *
