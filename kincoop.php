@@ -20,8 +20,10 @@ const REVERSIBLE_AMOUNT_KEYS = array(
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
  */
 function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
-  if (isGiftRequest($op, $objectName, $params['financial_type_id'])) {
-    array_walk_recursive($params, 'reverse_sign_if_appropriate');
+  if(isset($params['financial_type_id'])) {
+    if (isGiftRequest($op, $objectName, $params['financial_type_id'])) {
+      array_walk_recursive($params, 'reverse_sign_if_appropriate');
+    }
   }
 }
 
