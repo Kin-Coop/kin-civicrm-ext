@@ -20,10 +20,8 @@ const REVERSIBLE_AMOUNT_KEYS = array(
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
  */
 function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
-  if(isset($params['financial_type_id'])) {
-    if (isGiftRequest($op, $objectName, $params['financial_type_id'])) {
-      array_walk_recursive($params, 'reverse_sign_if_appropriate');
-    }
+  if (isGiftRequest($op, $objectName, $params)) {
+    reverseSignsOnAmounts($params);
   }
 }
 
@@ -54,17 +52,26 @@ function kincoop_civicrm_enable(): void {
   _kincoop_civix_civicrm_enable();
 }
 
-function isGiftRequest($op, $objectName, $financialTypeId): bool {
-  return $objectName == 'Contribution' && $op == 'create' && isAssociatedWithGift($financialTypeId);
+function isGiftRequest($op, $objectName, $params): bool {
+  return $objectName == 'Contribution' && $op == 'create' && isAssociatedWithGift($params);
 }
 
-function isAssociatedWithGift($financial_type_id): bool {
+function isAssociatedWithGift($params): bool {
+  $paramsArray = (array) $params;
+  $financialTypeId = $paramsArray['financial_type_id'];
+  if (!isset($financialTypeId)) {
+    return FALSE;
+  }
   $ftName = CRM_Core_DAO::singleValueQuery('SELECT name FROM civicrm_financial_type WHERE id = %1',
-    array(1 => array($financial_type_id, 'Integer')));
+    array(1 => array($financialTypeId, 'Integer')));
   return $ftName == GIFT_FT_NAME;
 }
 
-function reverse_sign_if_appropriate(&$item, $key): void {
+function reverseSignsOnAmounts(&$params): void {
+  array_walk_recursive($params, 'reverseSignIfAppropriate');
+}
+
+function reverseSignIfAppropriate(&$item, $key): void {
   if (!isReversibleAmount($key)) {
     return;
   }
@@ -75,7 +82,6 @@ function reverse_sign_if_appropriate(&$item, $key): void {
   }
 }
 
-function isReversibleAmount($key): bool
-{
+function isReversibleAmount($key): bool {
   return array_key_exists($key, REVERSIBLE_AMOUNT_KEYS);
 }
