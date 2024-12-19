@@ -20,20 +20,20 @@ const REVERSIBLE_AMOUNT_KEYS = array(
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
  */
 function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
-  if (isGiftRequest($op, $objectName, $params)) {
+  if (isNewContribution($objectName, $op) && isAssociatedWithGift($params)) {
     reverseSignsOnAmounts($params);
   }
 }
 
 /**
- * Implements hook_civicrm_post
+ * Implements hook_civirules_alter_trigger_data
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_post
+ * @link https://docs.civicrm.org/civirules/en/latest/hooks/hook_civirules_alter_trigger_data/
  */
-function kincoop_civicrm_post($op, $objectName, $id, &$params) {
-  if (isGiftRequest($op, $objectName, $params)) {
-    $householdContactId = getHouseholdContactId($params);
-    Civi::log()->debug('householdContactId: ' . $householdContactId);  // TODO
+function kincoop_civirules_alter_trigger_data(&$triggerData) {
+  $contributionData = $triggerData->getEntityData('Contribution');
+  if (isset($contributionData) && isAssociatedWithGift($contributionData)) {
+    reassignContactIdToHousehold($triggerData, $contributionData);
   }
 }
 
@@ -64,12 +64,12 @@ function kincoop_civicrm_enable(): void {
   _kincoop_civix_civicrm_enable();
 }
 
-function isGiftRequest($op, $objectName, $params): bool {
-  return $objectName == 'Contribution' && $op == 'create' && isAssociatedWithGift($params);
+function isNewContribution($objectName, $op): bool {
+  return $objectName == 'Contribution' && $op == 'create';
 }
 
-function isAssociatedWithGift($params): bool {
-  $financialTypeId = getFromObjectOrArray($params, 'financial_type_id');
+function isAssociatedWithGift($contributionData): bool {
+  $financialTypeId = getFromObjectOrArray($contributionData, 'financial_type_id');
   if (!isset($financialTypeId)) {
     return FALSE;
   }
@@ -97,12 +97,23 @@ function isReversibleAmount($key): bool {
   return array_key_exists($key, REVERSIBLE_AMOUNT_KEYS);
 }
 
-function getHouseholdContactId($params): ?int {
-  $contributionId = getFromObjectOrArray($params, 'id');
+function reassignContactIdToHousehold($triggerData, $contributionData): void {
+  $householdContactId = getHouseholdContactId($contributionData);
+  if (!isset($householdContactId)) {
+    Civi::log()->debug('[' . __FUNCTION__ . '] ' .
+      'Warning: no household found for this contribution [#' . $contributionData->id . '].' .
+      'This may lead to an unexpected action.');
+  }
+  $triggerData->setContactId($householdContactId);
+}
+
+function getHouseholdContactId($contributionData): ?int {
+  $contributionId = getFromObjectOrArray($contributionData, 'id');
   if (!isset($contributionId)) {
     Civi::log()->debug('$contributionId not present');
     return null;
   }
+  Civi::log()->debug('[' . __FUNCTION__ . '] $contributionId: ' . $contributionId);
 
   $contributionCustomGroupTableName = CRM_Core_DAO::singleValueQuery(
     'SELECT table_name FROM civicrm_custom_group WHERE extends = \'Contribution\'');
