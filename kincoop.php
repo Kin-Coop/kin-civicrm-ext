@@ -20,9 +20,10 @@ const REVERSIBLE_AMOUNT_KEYS = array(
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
  */
 function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
-  Civi::log()->debug(
+  Civi::log()->debug('[' . __FUNCTION__ . '] ' .
     '$objectName: ' . $objectName . ', ' .
     '$op: ' . $op . ', ' .
+    '$id: ' . $id . ', ' .
     '$params: ' . print_r($params, TRUE));
 
   if(isset($params['financial_type_id'])) {
@@ -30,6 +31,14 @@ function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
       array_walk_recursive($params, 'reverse_sign_if_appropriate');
     }
   }
+}
+
+function kincoop_civicrm_post($op, $objectName, $id, &$params) {
+  Civi::log()->debug('[' . __FUNCTION__ . '] ' .
+    '$objectName: ' . $objectName . ', ' .
+    '$op: ' . $op . ', ' .
+    '$id: ' . $id . ', ' .
+    '$params: ' . print_r($params, TRUE));
 }
 
 /**
