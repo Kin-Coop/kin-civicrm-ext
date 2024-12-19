@@ -26,6 +26,18 @@ function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
 }
 
 /**
+ * Implements hook_civicrm_post
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_post
+ */
+function kincoop_civicrm_post($op, $objectName, $id, &$params) {
+  if (isGiftRequest($op, $objectName, $params)) {
+    $householdContactId = getHouseholdContactId($params);
+    Civi::log()->debug('householdContactId: ' . $householdContactId);  // TODO
+  }
+}
+
+/**
  * Implements hook_civicrm_config().
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config/
@@ -57,8 +69,7 @@ function isGiftRequest($op, $objectName, $params): bool {
 }
 
 function isAssociatedWithGift($params): bool {
-  $paramsArray = (array) $params;
-  $financialTypeId = $paramsArray['financial_type_id'];
+  $financialTypeId = getFromObjectOrArray($params, 'financial_type_id');
   if (!isset($financialTypeId)) {
     return FALSE;
   }
@@ -84,4 +95,30 @@ function reverseSignIfAppropriate(&$item, $key): void {
 
 function isReversibleAmount($key): bool {
   return array_key_exists($key, REVERSIBLE_AMOUNT_KEYS);
+}
+
+function getHouseholdContactId($params): ?int {
+  $contributionId = getFromObjectOrArray($params, 'id');
+  if (!isset($contributionId)) {
+    Civi::log()->debug('$contributionId not present');
+    return null;
+  }
+
+  $contributionCustomGroupTableName = CRM_Core_DAO::singleValueQuery(
+    'SELECT table_name FROM civicrm_custom_group WHERE extends = \'Contribution\'');
+
+  $householdCustomFieldId = CRM_Core_DAO::singleValueQuery(
+    'SELECT id FROM civicrm_custom_field WHERE name = \'Household\'');
+  $householdContactIdColumnName = 'household_' . $householdCustomFieldId;
+
+  return CRM_Core_DAO::singleValueQuery(
+    'SELECT ' . $householdContactIdColumnName .
+    ' FROM ' . $contributionCustomGroupTableName .
+    ' WHERE entity_id = %1',
+    array(1 => array($contributionId, 'Integer')));
+}
+
+function getFromObjectOrArray($objectOrArray, $key) {
+  $array = (array) $objectOrArray;
+  return $array[$key];
 }
