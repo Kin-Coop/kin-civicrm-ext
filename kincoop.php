@@ -20,7 +20,10 @@ const REVERSIBLE_AMOUNT_KEYS = array(
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
  */
 function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
-  Civi::log()->debug('$params: ' . print_r($params, TRUE));
+  Civi::log()->debug(
+    '$objectName: ' . $objectName . ', ' .
+    '$op: ' . $op . ', ' .
+    '$params: ' . print_r($params, TRUE));
 
   if(isset($params['financial_type_id'])) {
     if (isGiftRequest($op, $objectName, $params['financial_type_id'])) {
