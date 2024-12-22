@@ -20,8 +20,10 @@ const REVERSIBLE_AMOUNT_KEYS = array(
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
  */
 function kincoop_civicrm_pre($op, $objectName, $id, &$params) {
-  if (isNewContribution($objectName, $op) && isAssociatedWithGift($params)) {
-    reverseSignsOnAmounts($params);
+  if(isset($params['financial_type_id'])) {
+    if (isNewContribution($objectName, $op) && isAssociatedWithGift($params)) {
+      reverseSignsOnAmounts($params);
+    }
   }
 }
 
