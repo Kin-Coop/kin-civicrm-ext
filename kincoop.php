@@ -133,5 +133,5 @@ function getHouseholdContactId($contributionData): ?int {
 
 function getFromObjectOrArray($objectOrArray, $key) {
   $array = (array) $objectOrArray;
-  return $array[$key];
+    return $array[$key] ?? null;
 }
