@@ -115,7 +115,7 @@ function getHouseholdContactId($contributionData): ?int {
     Civi::log()->debug('$contributionId not present');
     return null;
   }
-  Civi::log()->debug('[' . __FUNCTION__ . '] $contributionId: ' . $contributionId);
+  //Civi::log()->debug('[' . __FUNCTION__ . '] $contributionId: ' . $contributionId);
 
   $contributionCustomGroupTableName = CRM_Core_DAO::singleValueQuery(
     'SELECT table_name FROM civicrm_custom_group WHERE extends = \'Contribution\'');
@@ -135,3 +135,67 @@ function getFromObjectOrArray($objectOrArray, $key) {
   $array = (array) $objectOrArray;
     return $array[$key] ?? null;
 }
+
+/**
+ * Implements hook_civicrm_buildForm().
+ *
+ * Set a default value for an event price set field.
+ *
+ * @param string $formName
+ * @param CRM_Core_Form $form
+ */
+function kincoop_civicrm_buildForm($formName, $form) {
+    //Civi::log()->debug('Contents of $formName: ' . print_r($formName, TRUE));
+    //Civi::log()->debug('Contents of $formName: ' . print_r($form, TRUE));
+    if ($formName === 'CRM_Contribute_Form_Contribution_Main') {
+        if ($form->_id === 1) {
+            if($_GET['groupid'] && $_GET['me']) {
+                if ($form->getAction() == CRM_Core_Action::ADD) {
+                    $ref = $_GET['me'] . '-' . date('mdi');
+                    $defaults['custom_25'] = $_GET['groupid'];
+                    $defaults['custom_61'] = $ref;
+                    $form->setDefaults($defaults);
+                    //Civi::log()->debug('Contents of $defaults: ' . print_r($form->_fields, TRUE));
+                }
+            }
+        } elseif ($form->_id === 3) {
+            if($_GET['groupid'] && $_GET['me']) {
+                if ($form->getAction() == CRM_Core_Action::ADD) {
+                    $defaults['custom_25'] = $_GET['groupid'];
+                    //$defaults['custom_62'] = 'Gift';
+                    $form->setDefaults($defaults);
+                }
+            }
+        } elseif ($form->_id === 4) {
+            //Civi::log()->debug('Contents of $formName: ' . print_r($_GET, TRUE));
+            if($_GET['groupid'] && $_GET['me']) {
+                //Civi::log()->debug('Contents of $defaults: 1');
+                if ($form->getAction() == CRM_Core_Action::ADD) {
+                    $cid = CRM_Core_Session::singleton()->getLoggedInContactID();
+                    $cid = $cid ? $cid : 'K';
+                    $ref = $cid . '-' . date('mdi');
+                    $defaults['custom_25'] = $_GET['groupid'];
+                    $defaults['custom_61'] = $ref;
+                    $form->setDefaults($defaults);
+                    //Civi::log()->debug('Contents of $defaults: ' . print_r($form->_fields, TRUE));
+                }
+            }
+        }
+    }
+}
+
+/*
+function civicrm_custom_access_civicrm_buildForm($formName, &$form) {
+    global $user;
+    drupal_access_denied();
+    drupal_exit();
+
+    $grant_access = 0;
+    if(\Drupal::currentUser()->isAnonymous()) {
+        if($formName == 'CRM_Contribute_Form_Contribution_Main' && $form->_id == 4 && !$grant_access) {
+            drupal_access_denied();
+            drupal_exit();
+        }
+    }
+}
+*/

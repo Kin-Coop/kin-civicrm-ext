@@ -28,7 +28,7 @@
   </classloader>
   <civix>
     <namespace>CRM/Kincoop</namespace>
-    <format>24.09.1</format>
+    <format>25.01.1</format>
     <angularModule>crmKincoop</angularModule>
   </civix>
   <mixins>
