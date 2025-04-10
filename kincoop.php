@@ -155,6 +155,7 @@ function kincoop_civicrm_buildForm($formName, $form) {
                     $defaults['custom_25'] = $_GET['groupid'];
                     $defaults['custom_61'] = $ref;
                     $form->setDefaults($defaults);
+                    $form->addRule('custom_25', ts('This field is required.'), 'required');
                     //Civi::log()->debug('Contents of $defaults: ' . print_r($form->_fields, TRUE));
                 }
             }
@@ -164,6 +165,7 @@ function kincoop_civicrm_buildForm($formName, $form) {
                     $defaults['custom_25'] = $_GET['groupid'];
                     //$defaults['custom_62'] = 'Gift';
                     $form->setDefaults($defaults);
+                    $form->addRule('custom_25', ts('This field is required.'), 'required');
                 }
             }
         } elseif ($form->_id === 4) {
@@ -177,11 +179,25 @@ function kincoop_civicrm_buildForm($formName, $form) {
                     $defaults['custom_25'] = $_GET['groupid'];
                     $defaults['custom_61'] = $ref;
                     $form->setDefaults($defaults);
+                    $form->addRule('custom_25', ts('This field is required.'), 'required');
                     //Civi::log()->debug('Contents of $defaults: ' . print_r($form->_fields, TRUE));
                 }
             }
         }
     }
+}
+
+// Check group/household is filled in
+function kincoop_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
+    if ($formName === 'CRM_Contribute_Form_Contribution_Main') {
+        if ($form->_id === 1 || $form->_id === 3 || $form->_id ===4) {
+            //Civi::log()->debug('Contents of $defaults: ' . print_r($fields, TRUE));
+            if(empty($fields['custom_25'])) {
+                $errors['custom_25'] = ts('This field is required.');
+            }
+        }
+    }
+    return;
 }
 
 /*
